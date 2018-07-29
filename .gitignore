@@ -1,5 +1,6 @@
 # Add any directories, files, or patterns you don't want to be tracked by version control
 build
 dist
+scrapy_cookie_proxies.egg-info
 .idea
-*.egg-info
+.pyc
