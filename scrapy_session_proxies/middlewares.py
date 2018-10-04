@@ -12,7 +12,14 @@ class ProxyMiddleware:
 
     def __init__(self, settings):
         proxy_file = settings.get('PROXY_FILE')
-        self.proxy_list = ProxyList.from_file(proxy_file)
+        ua_settings = settings.get('PROXY_USER_AGENTS')
+        if ua_settings == 'MOBILE':
+            ua = ProxyList.UA_MOBILE
+        elif ua_settings == 'DESKTOP':
+            ua = ProxyList.UA_DESKTOP
+        else:
+            ua = ProxyList.UA_ALL
+        self.proxy_list = ProxyList.from_file(proxy_file, ua)
         self.retry_times_per_proxy = settings.get('PROXY_RETRY_TIMES_PER_PROXY')
         self.retry_times_per_url = settings.get('PROXY_RETRY_TIMES_PER_URL')
         self.ban_policy = BanPolicy()
