@@ -109,3 +109,13 @@ class ProxyListTest(unittest.TestCase):
         for _ in range(1500):
             self.assertIn(self.proxy_list.get_random_proxy(), self.proxy_list.live_proxies)
             self.assertIn(self.proxy_list.get_random_proxy(proven_only=True), self.proxy_list.proven_proxies)
+
+    def test_user_agents(self):
+        proxy_list = ProxyList(self.proxies, ua=ProxyList.UA_MOBILE)
+        len_mobile = len(proxy_list.user_agents)
+        proxy_list = ProxyList(self.proxies, ua=ProxyList.UA_DESKTOP)
+        len_desktop = len(proxy_list.user_agents)
+        proxy_list = ProxyList(self.proxies, ua=ProxyList.UA_ALL)
+        len_all = len(proxy_list.user_agents)
+        self.assertLess(len_mobile, len_desktop)
+        self.assertLess(len_desktop, len_all)

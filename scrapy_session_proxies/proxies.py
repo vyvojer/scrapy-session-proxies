@@ -36,11 +36,21 @@ class ProxyItem:
 
 class ProxyList:
 
-    def __init__(self, proxies: Iterable[ProxyItem]):
+    UA_ALL = 0
+    UA_DESKTOP = 1
+    UA_MOBILE = 2
+
+    def __init__(self, proxies: Iterable[ProxyItem], ua: int=UA_ALL):
         self.proxies = list(proxies)
         module_dir = os.path.dirname(os.path.realpath(__file__))
-        ua_path = os.path.join(module_dir, 'mobile_agents.txt')
-        self.user_agents = self._load_user_agents(ua_path)
+        agents = []
+        if ua in [ProxyList.UA_ALL, ProxyList.UA_DESKTOP]:
+            ua_path = os.path.join(module_dir, 'desktop_agents.txt')
+            agents.extend(self._load_user_agents(ua_path))
+        if ua in [ProxyList.UA_ALL, ProxyList.UA_MOBILE]:
+            ua_path = os.path.join(module_dir, 'mobile_agents.txt')
+            agents.extend(self._load_user_agents(ua_path))
+        self.user_agents = agents
         for index, proxy in enumerate(self.proxies):
             proxy.cookiejar = index
             proxy.user_agent = random.choice(self.user_agents)
@@ -85,26 +95,26 @@ class ProxyList:
             return random.choice(self.live_proxies)
 
     @classmethod
-    def from_json(cls, proxies: json):
+    def from_json(cls, proxies: json, ua: int=UA_ALL):
         proxies = [ProxyItem(proxy['ip'], proxy['port']) for proxy in json.loads(proxies)]
-        return cls(proxies)
+        return cls(proxies, ua)
 
     @classmethod
-    def from_json_file(cls, path):
+    def from_json_file(cls, path: str, ua: int=UA_ALL):
         with open(path) as file:
             proxies = [ProxyItem(proxy['ip'], proxy['port']) for proxy in json.load(file)]
-        return cls(proxies)
+        return cls(proxies, ua)
 
     @classmethod
-    def from_file(cls, path):
+    def from_file(cls, path: str, ua: int=UA_ALL):
         _, extension = os.path.splitext(path)
         if extension == '.txt':
-            return ProxyList.from_txt_file(path)
+            return ProxyList.from_txt_file(path, ua)
         if extension == '.json':
-            return ProxyList.from_json_file(path)
+            return ProxyList.from_json_file(path, ua)
 
     @classmethod
-    def from_txt_file(cls, path):
+    def from_txt_file(cls, path: str, ua: int=UA_ALL):
         proxies = []
         with open(path) as file:
             for line in file:
@@ -113,5 +123,5 @@ class ProxyList:
                     ip = match.group(1)
                     port = match.group(2)
                     proxies.append(ProxyItem(ip, port))
-        return cls(proxies)
+        return cls(proxies, ua)
 
