@@ -1,8 +1,9 @@
 import re
 import random
 import json
-import os
+import os, os.path
 from typing import Iterable
+
 
 class ProxyItem:
     def __init__(self, ip, port, user_agent=None, cookiejar: int=None):
@@ -10,13 +11,18 @@ class ProxyItem:
         self.port = port
         self.user_agent = user_agent
         self.cookiejar = cookiejar
-        self.checked = False
-        self.dead = False
+        self.is_checked = False
+        self.is_dead = False
+        self.is_banned = False
+        self.failed_num = 0
 
     def __repr__(self):
         cls_repr = self.__class__.__name__
         repr = "{}(ip={}, port={}, user_agent={}, cookiejar={})"
         return repr.format(cls_repr, self.ip, self.port, self.user_agent, self.cookiejar)
+
+    def __str__(self):
+        return "{}:{}".format(self.ip, self.port)
 
     def __eq__(self, other):
         return (self.ip, self.port) == (other.ip, other.port)
@@ -53,11 +59,11 @@ class ProxyList:
 
     @property
     def live_proxies(self):
-        return [proxy for proxy in self.proxies if not proxy.dead]
+        return [proxy for proxy in self.proxies if not proxy.is_dead and not proxy.is_banned]
 
     @property
-    def checked_proxies(self):
-        return [proxy for proxy in self.proxies if proxy.checked and not proxy.dead]
+    def proven_proxies(self):
+        return [proxy for proxy in self.proxies if proxy.is_checked and not proxy.is_dead and not proxy.is_banned]
 
     def get_proxy(self, ip: str, port: str) -> ProxyItem:
         matches = [proxy for proxy in self.proxies if proxy.ip == ip and proxy.port == port]
@@ -72,9 +78,9 @@ class ProxyList:
             port = match.group(2)
             return self.get_proxy(ip, port)
 
-    def get_random_proxy(self, checked_only=False):
-        if checked_only:
-            return random.choice(self.checked_proxies)
+    def get_random_proxy(self, proven_only=False):
+        if proven_only and self.proven_proxies:
+            return random.choice(self.proven_proxies)
         else:
             return random.choice(self.live_proxies)
 
@@ -84,7 +90,28 @@ class ProxyList:
         return cls(proxies)
 
     @classmethod
-    def from_file(cls, path):
+    def from_json_file(cls, path):
         with open(path) as file:
             proxies = [ProxyItem(proxy['ip'], proxy['port']) for proxy in json.load(file)]
         return cls(proxies)
+
+    @classmethod
+    def from_file(cls, path):
+        _, extension = os.path.splitext(path)
+        if extension == '.txt':
+            return ProxyList.from_txt_file(path)
+        if extension == '.json':
+            return ProxyList.from_json_file(path)
+
+    @classmethod
+    def from_txt_file(cls, path):
+        proxies = []
+        with open(path) as file:
+            for line in file:
+                match = re.search('(\d+\.\d+\.\d+\.\d+):(\d+)', line)
+                if match:
+                    ip = match.group(1)
+                    port = match.group(2)
+                    proxies.append(ProxyItem(ip, port))
+        return cls(proxies)
+
