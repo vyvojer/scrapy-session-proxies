@@ -4,3 +4,4 @@ dist
 scrapy_cookie_proxies.egg-info
 .idea
 .pyc
+*.log
