@@ -110,6 +110,15 @@ class ProxyListTest(unittest.TestCase):
             self.assertIn(self.proxy_list.get_random_proxy(), self.proxy_list.live_proxies)
             self.assertIn(self.proxy_list.get_random_proxy(proven_only=True), self.proxy_list.proven_proxies)
 
+    def test_get_random_proxy_empty_list(self):
+        self.proxy_list[0].is_dead = True
+        self.proxy_list[1].is_dead = True
+        self.proxy_list[1].is_dead = True
+        self.proxy_list[2].is_dead = True
+        self.proxy_list[2].is_dead = True
+        with self.assertRaises(ProxyListIsEmptyException):
+            self.proxy_list.get_random_proxy()
+
     def test_user_agents(self):
         proxy_list = ProxyList(self.proxies, ua=ProxyList.UA_MOBILE)
         len_mobile = len(proxy_list.user_agents)

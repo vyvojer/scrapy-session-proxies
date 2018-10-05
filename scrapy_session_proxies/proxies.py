@@ -34,6 +34,9 @@ class ProxyItem:
         return "{}-{}".format(self.ip.replace(".", "_"), self.port)
 
 
+class ProxyListIsEmptyException(Exception):
+    pass
+
 class ProxyList:
 
     UA_ALL = 0
@@ -90,9 +93,15 @@ class ProxyList:
 
     def get_random_proxy(self, proven_only=False):
         if proven_only and self.proven_proxies:
-            return random.choice(self.proven_proxies)
+            try:
+                return random.choice(self.proven_proxies)
+            except IndexError:
+                raise ProxyListIsEmptyException("Proven proxies list is empty")
         else:
-            return random.choice(self.live_proxies)
+            try:
+                return random.choice(self.live_proxies)
+            except IndexError:
+                raise ProxyListIsEmptyException("Proxies list is empty")
 
     @classmethod
     def from_json(cls, proxies: json, ua: int=UA_ALL):
