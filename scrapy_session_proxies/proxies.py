@@ -3,6 +3,9 @@ import random
 import json
 import os, os.path
 from typing import Iterable
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class ProxyItem:
@@ -96,12 +99,12 @@ class ProxyList:
             try:
                 return random.choice(self.proven_proxies)
             except IndexError:
-                raise ProxyListIsEmptyException("Proven proxies list is empty")
+                raise ProxyListIsEmptyException("Proven proxies list is empty") from None
         else:
             try:
                 return random.choice(self.live_proxies)
             except IndexError:
-                raise ProxyListIsEmptyException("Proxies list is empty")
+                raise ProxyListIsEmptyException("Proxies list is empty") from None
 
     @classmethod
     def from_json(cls, proxies: json, ua: int=UA_ALL):
